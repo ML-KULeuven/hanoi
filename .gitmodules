@@ -1,0 +1,3 @@
+[submodule "hanoi/dc_bridge"]
+	path = hanoi/dc_bridge
+	url = https://pedrozudo@bitbucket.org/dtai_robotics/dc_bridge.git
