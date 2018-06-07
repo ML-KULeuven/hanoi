@@ -1,0 +1,5 @@
+theme: jekyll-theme-leap-day
+logo: hanoi.png
+title: "DTAI Robotics: Towers of Hanoi example" 
+baseurl: /hanoi
+is_project_page: true
