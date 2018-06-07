@@ -1,0 +1,3 @@
+<launch>
+	<node name="hanoi_actuator_node" pkg="hanoi_actuator" type="actuator.py" output="screen" />
+</launch>

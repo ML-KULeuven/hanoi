@@ -1,0 +1,1 @@
+roslaunch kinova_bringup kinova_robot.launch kinova_robotType:=m1n6s200

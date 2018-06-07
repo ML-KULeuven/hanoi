@@ -1,0 +1,15 @@
+<launch>
+	<arg name="model_file" default="hanoi.pl" />
+	<arg name="initial_positions" default="" />
+	<arg name="simulate" default="false" />
+	<arg name="experiment" default="false" />
+	<arg name="runs" default="1" />
+	<arg name="used_horizon" default="10" />
+	<param name="model_file" type="str" value="$(arg model_file)" />
+	<param name="initial_positions" type="str" value="$(arg initial_positions)" />
+	<param name="simulate" type="bool" value="$(arg simulate)" />
+	<param name="experiment" type="bool" value="$(arg experiment)" />
+	<param name="runs" type="int" value="$(arg runs)" />
+	<param name="used_horizon" type="int" value="$(arg used_horizon)" />
+	<node name="hanoi_reasoner_node" pkg="hanoi_reasoner" type="reasoner.py" output="screen" />
+</launch>
