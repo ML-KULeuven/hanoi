@@ -1,0 +1,8 @@
+<launch>
+	<arg name="with_visualization" default="false" />
+	<param name="with_visualization" type="bool" value="$(arg with_visualization)" />
+	<node name="hanoi_observer_node" pkg="hanoi_observer" type="observer.py" output="screen" />
+	<remap from="kinect2/qhd/image_color" to="image"/>
+	<include file="alvar.launch"/>
+	<include file="static_transform.launch"/>
+</launch>

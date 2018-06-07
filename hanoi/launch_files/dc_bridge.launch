@@ -1,0 +1,3 @@
+<launch>
+	<node name="dc_utils" pkg="dc_utils" type="dc_utils" output="screen" />
+</launch>
