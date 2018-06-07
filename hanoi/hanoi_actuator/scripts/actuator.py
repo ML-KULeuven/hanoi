@@ -14,7 +14,16 @@ from math import pi, cos, sin
 
 
 class Actuator:
+    """
+    This class implements an Actuator for a Kinova robotarm.
+    """
     def __init__(self, prefix, *args, **kwargs):
+        """
+        Initializes the Actuator for the robotarm with the given prefix.
+
+        Arguments:
+        prefix -- prefix identifying the robotarm (see Kinova API docs)
+        """
         rospy.loginfo("Initializing actuator")
         self.quat_vertical = tf.transformations.quaternion_from_euler(
             180*3.1415/180, 0*3.1415/180, 0*3.1415/180, 'rxyz')
@@ -24,12 +33,21 @@ class Actuator:
         self.init_position()
 
     def init_position(self):
+        """
+        Places the robot in a position ready to start.
+        """
         homeRobot(self.prefix)
         self.go_home()
         self.open_gripper()
 
     def safe_position(self, position):
-        # For safety: make sure the robot arm does not hit stuff
+        """
+        Converts the given position to a safe position.
+        This takes into account the boundaries in the real world to avoid collisions with table, wall, ...
+
+        Returns:
+        a tuple (x, y, z) with the safe coordinates
+        """
         x = max(min(position[0], 0.50), -.50) - 0.02
         if x < -0.10:
             x = -0.14
@@ -40,13 +58,25 @@ class Actuator:
         return (x, y, z)
 
     def as_tuple(self, position):
+        """
+        Converts a Position object to a tuple.
+        """
         return (position.x, position.y, position.z)
 
     def go_home(self):
+        """
+        Brings the robotarm to a defined home position.
+        """
         rospy.loginfo('Going home!')
         self.go_to_aligned((0.0, -.2, .4))
 
     def pickup(self, position):
+        """
+        Performs the pickup procedure to grasp an object at the given position.
+
+        Arguments:
+        position -- a tuple (x, y, z) identifying the location of the object.
+        """
         rospy.loginfo("Picking up item at position\n{}".format(position))
         safe_pos = self.safe_position(position)
         # y = safe_pos[1]
@@ -61,6 +91,12 @@ class Actuator:
         self.go_to_aligned((safe_pos[0], y, 0.4))
 
     def drop(self, position):
+        """
+        Performs the drop procedure to place an object at the given position.
+
+        Arguments:
+        position -- a tuple (x, y, z) identifying the target location.
+        """
         rospy.loginfo("Dropping item at position\n{}".format(position))
         safe_pos = self.safe_position(position)
         # y = safe_pos[1]
@@ -73,39 +109,55 @@ class Actuator:
         self.go_to_aligned((safe_pos[0], y, 0.4))
 
     def go_to_aligned(self, position):
+        """
+        Moves the robotarm to the given position with the gripper horizontally aligned.
+        """
         p, q = self.generate_gripper_align_pose(
             position, 0.03, math.pi/2.0, 0.0, 0.0)
         return cartesian_pose_client(p, q, self.prefix)
 
     def open_gripper(self):
+        """
+        Opens the gripper of the robotarm.
+        """
         rospy.loginfo('Opening gripper')
         return gripper_client([0, 0, 0], self.prefix)
 
     def close_gripper(self):
+        """
+        Closes the gripper of the robotarm.
+        """
         rospy.loginfo('Closing gripper')
         return gripper_client([6400, 6400, 0], self.prefix)
 
     def grasp(self):
+        """
+        Grasps an object by partially closing the gripper of the robotarm.
+        """
         rospy.loginfo('Grasping object')
+        # For 2 finger robot. 
+        # If the robot has 3 fingers the third element in the list should also be set to 2600.
         return gripper_client([2600, 2600, 0], self.prefix)
 
-    # /**
-    # Source (in C++): https://github.com/Kinovarobotics/kinova-ros/blob/master/kinova_moveit/kinova_arm_moveit_demo/src/pick_place.cpp
-    #  * @brief PickPlace::generate_gripper_align_pose
-    #  * @param targetpose_msg pick/place pose (object location): where gripper close/open the fingers (grasp/release the object). Only position information is used.
-    #  * @param dist distance of returned pose to targetpose
-    #  * @param azimuth an angle measured from the x-axis in the xy-plane in spherical coordinates, denoted theta (0<= theta < 2pi ).
-    #  * @param polar also named zenith, colatitude, denoted phi (0<=phi<=pi). It is the angle from the positive z-axis to the vector.  phi= pi/2 - delta where delta is the latitude.
-    #  * @param rot_gripper_z rotation along the z axis of the gripper reference frame (last joint rotation)
-    #  * @return a pose defined in a spherical coordinates where origin is located at the target pose. Normally it is a pre_grasp/post_realease pose, where gripper axis (last joint axis) is pointing to the object (target_pose).
-    #  */
     def generate_gripper_align_pose(self, target_position, dist, azimuth, polar, rot_gripper_z):
-        # computer pregrasp position w.r.t. location of grasp_pose in spherical coordinate. Orientation is w.r.t. fixed world (root) reference frame.
+        """
+        Generate an aligned pose at the given target position.
+        Code adapted from C++ implementation at https://github.com/Kinovarobotics/kinova-ros/blob/master/kinova_moveit/kinova_arm_moveit_demo/src/pick_place.cpp
+
+        Arguments:
+        target_position -- tuple (x, y, z) identifying the target position
+        dist -- distance of returned position to target_position
+        azimuth -- an angle measured from the x-axis in the xy-plane in spherical coordinates, denoted theta (0<= theta < 2pi)
+        polar -- also named zenith, colatitude, denoted phi (0<=phi<=pi). It is the angle from the positive z-axis to the vector.  phi= pi/2 - delta where delta is the latitude.
+        rot_gripper_z -- rotation along the z axis of the gripper reference frame (last joint rotation)
+
+        Returns:
+        a tuple ((px, py, pz), q) where (px, py, pz) is the target position and q is the target quaternion for the robotarm.
+        """
         delta_x = -dist * cos(azimuth) * sin(polar)
         delta_y = -dist * sin(azimuth) * sin(polar)
         delta_z = -dist * cos(polar)
 
-        # compute the orientation of gripper w.r.t. fixed world (root) reference frame. The gripper (z axis) should point(open) to the grasp_pose.
         q = tf.transformations.quaternion_from_euler(
             azimuth, polar, rot_gripper_z, 'rxyz')
 
@@ -116,6 +168,11 @@ class Actuator:
         return ((px, py, pz), q)
 
     def handle_action(self, req):
+        """
+        Action service handler.
+        Transforms the coordinates and executes the pickup and drop procedures.
+        Afterwards the robotarm is placed in its home position.
+        """
         transformed_from = self.as_tuple(self.transform(req.from_pose))
         self.pickup(transformed_from)
         transformed_to = self.as_tuple(self.transform(req.to_pose))
@@ -128,12 +185,18 @@ class Actuator:
         return resp
 
     def transform(self, pose):
+        """
+        Transforms the given pose to the link_base frame of the robotarm.
+        """
         transform = self.tfBuffer.lookup_transform("{}link_base".format(
             self.prefix), pose.header.frame_id, rospy.Time(0))
         res = tf2_geometry_msgs.do_transform_pose(pose, transform)
         return res.pose.position
 
     def handle_action_mock(self, req):
+        """
+        Mocks the Action service to execute actions manually when testing.
+        """
         print(req)
         raw_input("Press Enter to continue...")
         resp = ActionResponse(True, 'Msg for ActionResponse')

@@ -9,11 +9,24 @@ ACTION_REGEX = r"action\(move\((?P<disk>\d+),pos\((?P<disk_x>-?\d+\.\d+),(?P<dis
 
 
 class ParsedAction:
+    """
+    Class representing an action in the Tower of Hanoi game.
+    """
     @staticmethod
     def match(action):
+        """
+        Match the action string to the ACTION_REGEX defined above.
+        """
         return re.compile(ACTION_REGEX).match(action)
 
     def __init__(self, action, obs_msg):
+        """
+        Initialize this ParsedAction
+
+        Arguments:
+        action -- the action string received from the planner.
+        obs_msg -- observation message used for getting the action. This is used to preserve the orientation information of the objects.
+        """
         action = action.replace(' ', '')
         re_match = ParsedAction.match(action)
         re_groups = re_match.groupdict()
@@ -27,6 +40,9 @@ class ParsedAction:
             re_groups['tower_y']), float(re_groups['tower_z']))
 
     def get_orientation(self, obj_id, obs_msg):
+        """
+        Find the orientation of the given object in the observation.
+        """
         if obs_msg is None:
             return Quaternion()
         for o in obs_msg.observations:
@@ -35,6 +51,9 @@ class ParsedAction:
         return Quaternion()
 
     def from_point(self):
+        """
+        Get a PoseStamped of the from_point of this action.
+        """
         from_pose = PoseStamped()
         from_pose.header.frame_id = "ar_marker_0"
         from_pose.header.stamp = rospy.Time.now()
@@ -47,6 +66,9 @@ class ParsedAction:
         return from_pose
 
     def to_point(self):
+        """
+        Get a PoseStamped of the to_point of this action.
+        """
         to_pose = PoseStamped()
         to_pose.header.frame_id = "ar_marker_0"
         to_pose.header.stamp = rospy.Time.now()
@@ -59,6 +81,9 @@ class ParsedAction:
         return to_pose
 
     def create_request(self):
+        """
+        Create an ActionRequest for executing this action in the Actuator.
+        """
         req = ActionRequest()
 
         req.disk_id = self.disk

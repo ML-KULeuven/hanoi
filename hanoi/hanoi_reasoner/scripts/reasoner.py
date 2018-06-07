@@ -55,27 +55,45 @@ class Planner:
             self.experiment_run = ExperimentRun(run)
             self.simulate()
 
-    def init_log(self):
-        self.log_file = open(LOG_DIR + "{}.log".format(self.output_name), 'a')
-
     def format_observations(self, msg):
+        """
+        Format the observations in the given message to pass to the planner.
+
+        Arguments:
+        msg -- the Observations message received from the Observer.
+        """
         return "[{}]".format(",".join(map(lambda o: self.format_observation(
             o), filter(lambda o: o.id != REFERENCE_TAG_ID, msg.observations))))
 
     def format_observation(self, observation):
+        """
+        Format 1 Observation.
+        """
         p = observation.pose.pose.position
         return "observation(pos({}))~=({},{},{})".format(observation.id, p.x, p.y, p.z)
 
     def parse_action(self, best_action, msg):
+        """
+        Parse the given action string to a ParsedAction object.
+        """
         return ParsedAction(best_action, msg)
 
     def format_positions(self, positions):
+        """
+        Format positions for the simulated reasoner.
+        """
         return "[{}]".format(",".join(map(lambda (id, p): self.format_position(id, p), positions.iteritems())))
 
     def format_position(self, id, p):
+        """
+        Format 1 position
+        """
         return "observation(pos({}))~=({},{},{})".format(id, p[0], p[1], p[2])
 
     def initial_positions(self):
+        """
+        Get the initial positions for the simulated reasoner.
+        """
         if self.initial_positions_path is not None:
             with open(self.initial_positions_path, 'rb') as f:
                 return pickle.load(f)[self.run-1]
@@ -92,6 +110,9 @@ class Planner:
         }
 
     def simulate(self):
+        """
+        Simulate the Reasoner
+        """
         positions = self.initial_positions()
         rospy.loginfo("Run {} starting with initial positions {}".format(
             self.run, positions))
@@ -114,6 +135,10 @@ class Planner:
             positions[best_action.disk] = (to_point.pose.position.x, to_point.pose.position.y, to_point.pose.position.z)
 
     def callback_observations(self, msg):
+        """
+        Handle the Observations message callback.
+        This contains the main logic of the reasoner.
+        """
         # Format observations to string for input into HYPE
         obs_str = self.format_observations(msg)
 
@@ -139,21 +164,27 @@ class Planner:
             "ActionResponse: {} --> {}".format(result.success, result.message))
 
     def stop(self):
+        """
+        Stop the reasoner. Logs the experiment if there is one.
+        """
         if self.experiment is not None:
             self.experiment.add_run(self.experiment_run)
             self.log_experiment()
 
     def log_experiment(self):
+        """
+        Save a pickle dump of the experiment.
+        """
         with open(LOG_DIR + "{}_experiment.pick".format(self.output_name), 'wb') as f:
             pickle.dump(self.experiment, f)
 
     def do_step(self, obs_str):
-        # Call dc_bridge plan step
+        """
+        Calls the dc_bridge PlanStep service to execute a step in the planner.
+        """
         try:
             resp = self.util.plan_step(
-                # obs_str, False, 300, 50, self.used_horizon)
                 obs_str, False, 1000, 200, self.used_horizon)
-                # obs_str, False, 1000, 200, self.used_horizon)
             rospy.loginfo(resp)
         except Exception, e:
             rospy.logerr(e)
