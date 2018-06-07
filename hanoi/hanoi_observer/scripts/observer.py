@@ -42,6 +42,9 @@ class SimpleObserver:
         rospy.loginfo("Initialized {}".format(self))
 
     def get_frame(self, marker_id):
+        """
+        Helper method to return the tf frame name for the given AR tag.
+        """
         return "ar_marker_{}".format(marker_id)
 
     def callback(self, msg):
@@ -80,10 +83,15 @@ class SimpleObserver:
         rospy.sleep(rospy.Duration(1))
 
     def prettify(self, pose):
+        """
+        Creates a simple string to print the position in the given pose.
+        """
         return "({}, {}, {})".format(pose.pose.position.x, pose.pose.position.y, pose.pose.position.z)
 
     def send_marker(self, observation):
-        return
+        """
+        Publishes a visualization marker of the transformed observation to use in rviz for example.
+        """
         marker = Marker()
         marker.ns = 'hanoi_marker'
         marker.id = observation.id
@@ -105,6 +113,9 @@ class SimpleObserver:
         self.marker_publisher.publish(marker)
 
     def plot(self, msg, color='black'):
+        """
+        Plots the observations in a 2D plane using matplotlib.
+        """
         coords = map(lambda m: (float(m.pose.pose.position.x),
                                 float(m.pose.pose.position.y)), msg.observations)
         plt.scatter(*zip(*coords), c=color)
