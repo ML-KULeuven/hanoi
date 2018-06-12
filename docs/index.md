@@ -7,6 +7,8 @@ This page shows a demonstration of the project where a Kinova Mico robot arm pla
 The system uses a Kinect camera to observe the objects and is implemented in [ROS](http://www.ros.org/){:target="_blank"}.
 Planning is done using the HYPE planner.
 
+The project was realised as part of the master thesis of [Olivier Kamers](https://github.com/OlivierKamers){:target="_blank"}.
+
 # Experiments
 ## Setup
 The setup in the lab is shown in this figure:
