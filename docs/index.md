@@ -18,7 +18,7 @@ Each disk (block) has a color to identify its size in the model corresponding to
 ![Torens van Hanoi]({{ site.baseurl }}/assets/hanoi.png)
 
 ## Demo
-{% include vimeoPlayer.html id=273893698 %}
+{% include vimeoPlayer.html id=274675727 %}
 
 # Code
 ## Hanoi
