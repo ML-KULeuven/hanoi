@@ -2,6 +2,8 @@
 
 This repository contains an implementation of a system that allows a Kinova Mico robot arm to play the Tower of Hanoi game using a Kinect camera.
 
+A demo can be found at https://ml-kuleuven.github.io/hanoi/.
+
 ## Prerequisites
 
 The system is implemented in the Robot Operating System ([ROS](http://www.ros.org/)).
