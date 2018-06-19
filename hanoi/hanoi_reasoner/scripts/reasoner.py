@@ -4,7 +4,8 @@ import rospkg
 import rospy
 import time
 import pickle
-from dc_pyutils import DCPlannerUtil
+import os
+from dc_pybridge import DCPlannerUtil
 from hanoi_actuator.srv import Action
 from hanoi_observer.msg import Observations
 
@@ -35,10 +36,8 @@ class Planner:
             print(experiment)
         self.use_simulation = rospy.get_param('simulate', False)
         self.model_file_name = model_file_name
-        self.model_path = rospkg.RosPack().get_path('hanoi_reasoner') + \
-            "/{}".format(model_file_name)
-        with open(self.model_path, 'r+') as model:
-            self.util = DCPlannerUtil(model.read(), NB_SAMPLES)
+        self.model_path = os.path.join(rospkg.RosPack().get_path('hanoi_reasoner'), model_file_name)
+        self.util = DCPlannerUtil(self.model_path, NB_SAMPLES)
         self.initial_positions_path = rospy.get_param(
             'initial_positions', None)
         if self.initial_positions_path == "":

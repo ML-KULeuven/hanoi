@@ -1,4 +1,4 @@
-:- use_module('dc_planning_bridge.pl').
+:- use_module(library(planning)).
 :- use_module(library(lists)).
 
 % Options
@@ -45,7 +45,7 @@ satisfiable(A =< B).
 
 builtin(\+A) :- builtin(A).
 
-maxV(D,V):t := V is 1000.
+maxV(D,V):t <- V is 1000.
 
 deltaT(1).
 varQ(0.0004).
@@ -53,23 +53,23 @@ cov(1,[Cov],VarQ) :-
 	deltaT(DeltaT),
 	Cov is VarQ*DeltaT^2.
 
-tower(X) := member(X, [2, 3, 4]).
+tower(X) <- member(X, [2, 3, 4]).
 
-disk(X) := member(X, [6, 7, 8]).
+disk(X) <- member(X, [6, 7, 8]).
 
 % The initial tower
-initial_tower(2) := true.
+initial_tower(2) <- true.
 % The helper tower
-helper_tower(3) := true.
+helper_tower(3) <- true.
 % The target tower
-target_tower(4) := true.
+target_tower(4) <- true.
 
 % size/1
 % the size of the disk is a gaussian around its id (for testing)
-size(X) ~ gaussian(X, 0.01) := disk(X).
+size(X) ~ gaussian(X, 0.01) <- disk(X).
 
 % Stop condition: all disks on right tower in order
-stop:t := 
+stop:t <- 
     \+action(move(_,_,_,_)),
     target_tower(TT),
     findall_forward(D,on_tower(D):t~=TT,DisksOnRight),
@@ -78,9 +78,9 @@ stop:t :=
     length_of_partial_solution(DisksOnRight, AllDisks, L),
     L == NBDisks.
 
-reward:t ~ val(R) := 
+reward:t ~ val(R) <- 
     stop:t, R is 1000.
-reward:t ~ val(R) := 
+reward:t ~ val(R) <- 
     \+stop:t,
     target_tower(TT),
     findall_forward(D,on_tower(D):t~=TT,DisksOnRight),
@@ -108,21 +108,21 @@ length_of_partial_solution(DisksOnRight, AllDisks, N) :-
 
 % top_disk/1
 % true if X if there is no disk above X on the same tower.
-top_disk(X):t := 
+top_disk(X):t <- 
     findall_forward(Y,above(Y,X):t,[]).
 
-unify_position(Obj, Pos):t :=
+unify_position(Obj, Pos):t <-
     pos(Obj):t ~= distribution(val(Pos)).
 
-unify_position(Obj, Pos):t :=
+unify_position(Obj, Pos):t <-
     pos(Obj):t ~= Pos.
 
-distance_to(Disk, Tower, Dist):t :=
+distance_to(Disk, Tower, Dist):t <-
     unify_position(Disk, (PDX, PDY, PDZ)):t,
     unify_position(Tower,(PTX, PTY, PTZ)):t,
     Dist is sqrt( (PTX-PDX)^2 + (PTY-PDY)^2 + (PTZ-PDZ)^2 ).
 
-on_tower(D):t ~ val(Closest) := 
+on_tower(D):t ~ val(Closest) <- 
     disk(D),    
     initial_tower(IT),
     helper_tower(HT1),
@@ -136,7 +136,7 @@ on_tower(D):t ~ val(Closest) :=
     keysort([DistIT-IT,DistHT1-HT1,DistTT-TT], [_-Closest|_]).
 
 % Define admissible actions
-adm(action(move(X,pos(PXX,PXY,PXZ),T,pos(PTX,PTY,NZ)))):t :=
+adm(action(move(X,pos(PXX,PXY,PXZ),T,pos(PTX,PTY,NZ)))):t <-
     disk(X),tower(T),
     % X has to be the top disk
     top_disk(X):t,
@@ -158,7 +158,7 @@ adm(action(move(X,pos(PXX,PXY,PXZ),T,pos(PTX,PTY,NZ)))):t :=
 % check whether disk X is on top of disk Y
 % deterministically true if X and Y are on the same tower
 % and X is smaller than Y.
-above(X,Y):t := 
+above(X,Y):t <- 
     disk(X), disk(Y),
     on_tower(X):t ~= TX, on_tower(Y):t ~= TY,
     TX == TY,
@@ -166,31 +166,31 @@ above(X,Y):t :=
 
 % smaller/2
 % deterministically true if the size of disk X is strictly less than the size of disk Y.
-smaller(X,Y) :=
+smaller(X,Y) <-
     size(X) ~= SX, 
     size(Y) ~= SY, 
     SX < SY.
 
 % pos/1
-pos(ID):0 ~ val(P) :=
+pos(ID):0 ~ val(P) <-
 	observation(pos(ID)) ~= P.
     
 % Position given by observation
-pos(ID):t+1 ~ val(P) :=
+pos(ID):t+1 ~ val(P) <-
     observation(pos(ID)) ~= P.
 
 % Measurement model
-observation(pos(ID)):t+1 ~ finite([1:_]) := 
+observation(pos(ID)):t+1 ~ finite([1:_]) <- 
     true.
 
 % Position after move action without observation
-pos(ID):t+1 ~ indepGaussians([ ([X],[Cov]), ([Y],[Cov]), ([Z],[Cov]) ]) :=
+pos(ID):t+1 ~ indepGaussians([ ([X],[Cov]), ([Y],[Cov]), ([Z],[Cov]) ]) <-
 	action(move(ID,_,_,pos(X, Y, Z))),
 	varQ(VarQ),
 	cov(1,[Cov],VarQ).
 
 % Position without action and no observation
-pos(ID):t+1 ~ indepGaussians([ ([X],[Cov]), ([Y],[Cov]), ([Z],[Cov]) ]) :=
+pos(ID):t+1 ~ indepGaussians([ ([X],[Cov]), ([Y],[Cov]), ([Z],[Cov]) ]) <-
 	unify_position(ID,(X, Y, Z)):t,
 	varQ(VarQ),
 	cov(1,[Cov],VarQ).
