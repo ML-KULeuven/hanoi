@@ -59,10 +59,10 @@ catkin_python_setup()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  # Action.msg
-)
+# add_message_files(
+#   FILES
+#   # Action.msg
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -79,11 +79,11 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
-  geometry_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs  # Or other packages containing msgs
+#   geometry_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -115,8 +115,8 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-INCLUDE_DIRS 
-  include
+# INCLUDE_DIRS 
+#   include
 LIBRARIES 
   hanoi_reasoner
 CATKIN_DEPENDS 
@@ -165,10 +165,10 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_gencpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
-  ${catkin_LIBRARIES}
-  Yap
-)
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+#   Yap
+# )
 
 
 #############
